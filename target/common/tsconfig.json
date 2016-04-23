@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es5",
+    "declaration": true,
+    "noImplicitAny": true,
+    "noEmitOnError": true,
+    "sourceMap": false,
+    "rootDir": "../../src/common",
+    "outDir": "../../out/common"
+  },
+  "files": [
+    "../../type_decl/common/left-pad.d.ts",
+    "../../src/common/Timer.ts"
+  ]
+}

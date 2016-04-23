@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es5",
+    "declaration": true,
+    "noImplicitAny": true,
+    "noEmitOnError": true,
+    "sourceMap": false,
+    "rootDir": "../../src/server",
+    "outDir": "../../out/server"
+  },
+  "files": [
+    "../../type_decl/common/left-pad.d.ts",
+    "../../out/common/Timer.d.ts",
+    "../../typings/main/ambient/node/index.d.ts",
+    "../../type_decl/server/etc.d.ts",
+    "../../type_decl/server/koa.d.ts",
+    "../../type_decl/server/websocket.d.ts",
+    "../../src/server/App.ts",
+    "../../src/server/AppSession.ts",
+    "../../src/server/SessionManager.ts",
+    "../../src/server/Util.ts"
+  ]
+}

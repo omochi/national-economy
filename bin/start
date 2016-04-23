@@ -1,0 +1,22 @@
+#!/bin/bash
+set -ueo pipefail
+bin_dir=$(cd "$(dirname "$0")"; pwd)
+cd "$(dirname "$bin_dir")"
+
+echo "# configure"
+./configure.rb
+
+echo "# tsc common"
+tsc -p target/common
+
+echo "# tsc server"
+tsc -p target/server
+
+echo "# tsc browser"
+tsc -p target/browser
+
+echo "# webpack"
+webpack browser.js static/bundle.js
+
+echo "# run server"
+node index.js

@@ -1,0 +1,18 @@
+{
+  "name": "neco",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "get-random-values": "^1.2.0",
+    "koa": "^2.0.0",
+    "koa-static": "^3.0.0",
+    "typings": "^0.8.1",
+    "websocket": "^1.0.22"
+  }
+}

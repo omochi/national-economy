@@ -1,0 +1,5 @@
+.DS_Store
+/node_modules
+/typings
+/out
+/static/bundle.js

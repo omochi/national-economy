@@ -10,8 +10,16 @@
     "outDir": "../../out/browser"
   },
   "files": [
+    "../../node_modules/rx/ts/rx.all.d.ts",
     "../../type_decl/common/left-pad.d.ts",
+    "../../out/common/Data.d.ts",
+    "../../out/common/Error.d.ts",
+    "../../out/common/Json.d.ts",
+    "../../out/common/Message.d.ts",
+    "../../out/common/Socket.d.ts",
     "../../out/common/Timer.d.ts",
-    "../../src/browser/App.ts"
+    "../../src/browser/App.ts",
+    "../../src/browser/DataImpl.ts",
+    "../../src/browser/SocketImpl.ts"
   ]
 }

@@ -8,16 +8,16 @@ export class SessionEntry<T> {
 		this.touch(60);
 	}
 
-	get id(): string {
+	id(): string {
 		return this.id_;
 	}
-	get value(): T {
+	value(): T {
 		return this.value_;
 	}
-	get lastAccessTime(): Date {
+	lastAccessTime(): Date {
 		return this.lastAccessTime_;
 	}
-	get expiringTime(): Date {
+	expiringTime(): Date {
 		return this.expiringTime_;
 	} 
 
@@ -62,7 +62,7 @@ export class SessionManager<T> {
 		const entry = this.entries[id];
 		if (entry != null) {
 			entry.touch(this.sessionLifeTime);
-			console.log(`open session ${id}`);
+			// console.log(`open session ${id}`);
 		}
 
 		return entry;
@@ -95,7 +95,7 @@ export class SessionManager<T> {
 
 		const entry = this.createSession();
 
-		ctx.cookies.set(this.sessionIdKey, entry.id);
+		ctx.cookies.set(this.sessionIdKey, entry.id());
 
 		return next();
 	}
@@ -104,8 +104,8 @@ export class SessionManager<T> {
 		const now = new Date();
 		Object.keys(this.entries).forEach((id) => {
 			const entry = this.entries[id];
-			if (entry.expiringTime.getTime() <= now.getTime()) {
-				this.deleteSession(entry.id);
+			if (entry.expiringTime().getTime() <= now.getTime()) {
+				this.deleteSession(entry.id());
 			}
 		});
 	}

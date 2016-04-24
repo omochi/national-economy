@@ -3,6 +3,7 @@
   "version": false,
   "dependencies": {},
   "ambientDependencies": {
-    "node": "registry:dt/node#4.0.0+20160412142033"
+    "node": "registry:dt/node#4.0.0+20160412142033",
+    "websocket": "registry:dt/websocket#0.0.0+20160316155526"
   }
 }

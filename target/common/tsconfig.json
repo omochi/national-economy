@@ -10,7 +10,13 @@
     "outDir": "../../out/common"
   },
   "files": [
+    "../../node_modules/rx/ts/rx.all.d.ts",
     "../../type_decl/common/left-pad.d.ts",
+    "../../src/common/Data.ts",
+    "../../src/common/Error.ts",
+    "../../src/common/Json.ts",
+    "../../src/common/Message.ts",
+    "../../src/common/Socket.ts",
     "../../src/common/Timer.ts"
   ]
 }

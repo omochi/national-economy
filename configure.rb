@@ -7,20 +7,24 @@ require "json"
 $repo_top_dir = Pathname(__FILE__).parent.expand_path
 
 def get_files_in_dir(dir)
-    if ! dir.directory?
-        return []
-    end
     result = []
-    Dir.chdir(dir.to_s)
-    Pathname.glob("**/*") { |rel_path|
-        path = dir + rel_path
-        if ! path.file?
-            next
-        end
+    if dir.file?
+        path = dir
         if yield(path)
-            result.push(path)
+            result << path
         end
-    }
+    elsif dir.directory? 
+        Dir.chdir(dir.to_s)
+        Pathname.glob("**/*") { |rel_path|
+            path = dir + rel_path
+            if ! path.file?
+                next
+            end
+            if yield(path)
+                result.push(path)
+            end
+        }
+    end
     return result
 end
 def get_files_in_dir_with_ext(dir, ext)
@@ -117,6 +121,7 @@ class App
             t.output_dir = top_dir + "out/#{t.name}"
             t.target_dir = top_dir + "target/#{t.name}"
             t.type_decl_dirs += [
+                top_dir + "node_modules/rx/ts/rx.all.d.ts",
                 top_dir + "type_decl/common"
             ]
         }
@@ -128,6 +133,7 @@ class App
             t.target_dir = top_dir + "target/#{t.name}"
             t.type_decl_dirs += [
                 top_dir + "typings/main/ambient/node",
+                top_dir + "typings/main/ambient/websocket",
                 top_dir + "type_decl/server"
             ]
             t.dependencies.push(common_target)

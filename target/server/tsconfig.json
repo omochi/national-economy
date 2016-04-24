@@ -10,15 +10,23 @@
     "outDir": "../../out/server"
   },
   "files": [
+    "../../node_modules/rx/ts/rx.all.d.ts",
     "../../type_decl/common/left-pad.d.ts",
+    "../../out/common/Data.d.ts",
+    "../../out/common/Error.d.ts",
+    "../../out/common/Json.d.ts",
+    "../../out/common/Message.d.ts",
+    "../../out/common/Socket.d.ts",
     "../../out/common/Timer.d.ts",
     "../../typings/main/ambient/node/index.d.ts",
+    "../../typings/main/ambient/websocket/index.d.ts",
     "../../type_decl/server/etc.d.ts",
     "../../type_decl/server/koa.d.ts",
-    "../../type_decl/server/websocket.d.ts",
     "../../src/server/App.ts",
     "../../src/server/AppSession.ts",
-    "../../src/server/SessionManager.ts",
+    "../../src/server/DataImpl.ts",
+    "../../src/server/Session.ts",
+    "../../src/server/SocketImpl.ts",
     "../../src/server/Util.ts"
   ]
 }

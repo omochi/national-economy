@@ -13,7 +13,13 @@ export class SocketImpl implements Socket {
 		this.onMessage_ = new Subject<SocketMessage>();
 		this.onClose_ = new Subject<void>();
 		this.onError_ = new Subject<Error>();
+		this.preConnectBuffer_ = [];
 
+		socket.onopen = () => {
+			this.preConnectBuffer_.forEach(x => {
+				this._send(x);
+			});
+		};
 		socket.onmessage = (ev: MessageEvent) => {
 			const data = ev.data;
 			if (typeof data == "string") {
@@ -49,10 +55,19 @@ export class SocketImpl implements Socket {
 
 	send(message: SocketMessage) {
 		if (message.string != null) {
-			this.socket_.send(message.string);
+			this._send(message.string);
 		} else {
-			this.socket_.send(blobFromData(message.data));
+			this._send(blobFromData(message.data));
 		}
+	}
+
+	private _send(data: any) {
+		if (this.socket_.readyState == WebSocket.CONNECTING) {
+			this.preConnectBuffer_.push(data);
+			return;
+		}
+
+		this.socket_.send(data);
 	}
 
 	private handleError(error: Error) {
@@ -64,4 +79,6 @@ export class SocketImpl implements Socket {
 	private onMessage_: Subject<SocketMessage>;
 	private onClose_: Subject<void>;
 	private onError_: Subject<Error>;
+
+	private preConnectBuffer_: any[];
 };

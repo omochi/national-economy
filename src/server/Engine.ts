@@ -1,3 +1,4 @@
+import * as _ from "lodash";
 import * as Koa from "koa";
 import * as koaStatic from "koa-static";
 import { 
@@ -9,24 +10,38 @@ import { CompositeDisposable, Disposable } from "rx";
 
 import { toError } from "../../out/common/Error"; 
 import { Timer } from "../../out/common/Timer";
-import { MessageConnection } from "../../out/common/Message";
+import { Message, MessageConnection } from "../../out/common/Message";
 
 import { rand, makeRandomString } from "./Util";
 import { SessionManager } from "./Session";
 import { SocketImpl } from "./SocketImpl";
 
 export interface App {
+	init(engine: Engine): void;
+
 	createSessionData(): any;
 
-	onConnection(connection: MessageConnection): void;
-
+	createConnectionHandler(connection: MessageConnection): ConnectionHandler;
 }
 
-export class Engine<
-	AppType extends App
-> {
-	run(app: AppType) {
+export interface ConnectionHandler {
+	onMessage(message: Message): void;
+	onDestroy(): void;
+}
+
+interface ConnectionEntry {
+	connection: MessageConnection;
+	handler: ConnectionHandler;
+	disposable: Disposable;
+	sessionId: string;
+}
+
+export class Engine {
+	constructor(app: App) {
 		this.app_ = app;
+	}
+	run() {
+		this.app_.init(this);
 		this.diposable_ = new CompositeDisposable();
 		this.sessionManager_ = new SessionManager(() => { 
 			this.app_.createSessionData() });
@@ -64,40 +79,58 @@ export class Engine<
 			}
 			
 			const socket = new SocketImpl(request.accept(null, null));
-
+			this.createConnection(socket, sid);
 		});
 
 		httpServer.listen(port);
 	}
 
-	private createConnection(socket: SocketImpl) {
-		const connection = new MessageConnection(socket, sid);	
-		this.connections_.push(connection);
+	private createConnection(socket: SocketImpl, sessionId: string) {
+		const connection = new MessageConnection(socket);	
 
 		const disposable = new CompositeDisposable();
-
-		const destroyConnection = () => {
-			this.diposable_.remove(disposable);
-		};
-
-		let sub: Disposable = null;
-		sub = connection.onClose().subscribeOnNext(() => {
-			destroyConnection();
-		});
-		disposable.add(sub);
-		sub = connection.onError().subscribeOnNext((err) => {
-			destroyConnection();
-		});
-		disposable.add(sub);
-
 		this.diposable_.add(disposable);
 
-		this.app_.onConnection(connection);
+		let handler: ConnectionHandler = null;
+
+		[	connection.onMessage().subscribeOnNext((x) => {
+				handler.onMessage(x);
+			}),
+			connection.onClose().subscribeOnNext(() => {
+				this.destroyConnection(connection);
+			}),
+			connection.onError().subscribeOnNext((err) => {
+				this.destroyConnection(connection);
+			})
+		].forEach(x => { disposable.add(x) });
+
+		handler = this.app_.createConnectionHandler(connection);
+
+		this.connections_.push({
+			connection: connection,
+			handler: handler,
+			disposable: disposable,
+			sessionId: sessionId
+		});
+
 	}
 
-	private app_: AppType;
+	private destroyConnection(connection: MessageConnection) {
+		const index = _.findIndex(this.connections_,
+			x => { return x.connection == connection; });
+		if (index == -1) { 
+			return; 
+		}
+
+		const entry = this.connections_[index];
+		entry.handler.onDestroy();
+		this.diposable_.remove(entry.disposable);
+		this.connections_.splice(index, 1);
+	}
+
+	private app_: App;
 	private diposable_: CompositeDisposable;
 	private sessionManager_: SessionManager;
-	private connections_: MessageConnection[];
+	private connections_: ConnectionEntry[];
 
 }

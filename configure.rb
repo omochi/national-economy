@@ -121,6 +121,7 @@ class App
             t.output_dir = top_dir + "out/#{t.name}"
             t.target_dir = top_dir + "target/#{t.name}"
             t.type_decl_dirs += [
+                top_dir + "typings/main/definitions/lodash/index.d.ts",
                 top_dir + "node_modules/rx/ts/rx.all.d.ts",
                 top_dir + "type_decl/common"
             ]

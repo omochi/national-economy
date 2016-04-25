@@ -1,7 +1,9 @@
 {
   "name": "neco",
   "version": false,
-  "dependencies": {},
+  "dependencies": {
+    "lodash": "registry:npm/lodash#4.0.0+20160416211519"
+  },
   "ambientDependencies": {
     "node": "registry:dt/node#4.0.0+20160412142033",
     "websocket": "registry:dt/websocket#0.0.0+20160316155526"

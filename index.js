@@ -1,7 +1,11 @@
-const Engine = require("./out/server/Engine");
-const NationalEconomyApp = require("./out/server/NationalEconomy");
+"use strict";
+let pkg = require("./out/server/Engine");
+const Engine = pkg.Engine;
+pkg = require("./out/server/NationalEconomy");
+const NationalEconomyApp = pkg.NationalEconomyApp;
 
-const engine = new Engine<NationalEconomyApp>();
-const app = new NationalEconomyApp(engine);
-engine.run(app);
+const app = new NationalEconomyApp();
+
+const engine = new Engine(app);
+engine.run();
 

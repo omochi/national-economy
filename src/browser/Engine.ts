@@ -1,11 +1,21 @@
-class App {
+import { Message, MessageConnection,
+	PingMessage
+ } from "../../out/common/Message";
+
+ import { SocketImpl } from "./SocketImpl";
+
+
+export class Engine {
 
 	run() {
-		const socket = new WebSocket(this.getWebSocketUrl(window.location));
+		const url = this.getWebSocketUrl(window.location);
+		console.log(`url = ${url}`);
+		const socket = new SocketImpl(new WebSocket(url));
+		this.connection_ = new MessageConnection(socket);
+		this.connection_.send(new PingMessage());
 	}
 
 	getWebSocketUrl(location: Location): string {
-
 		const isSsl: boolean = (() => {
 			if (location.protocol == "https:") {
 				return true;
@@ -34,5 +44,6 @@ class App {
 		return strs.join("");
 	}
 
+	private connection_: MessageConnection;
+
 }
-export = App;

@@ -1,19 +1,24 @@
-import { Engine, App } from "./Engine";
-import { MessageConnection } from "../../out/common/Message";
-
-class SessionData {
-
-}
+import { Engine, App, ConnectionHandler } from "./Engine";
+import { Message, MessageConnection } from "../../out/common/Message";
 
 export class NationalEconomyApp implements App {
-	constructor(engine: Engine<NationalEconomyApp>) {
+	init(engine: Engine) {
 		this.engine_ = engine;
 	}
 	createSessionData(): any {
-		return new SessionData();
-	}
-	onConnection(connection: MessageConnection) {
+		return {
 
+		};
 	}
-	private engine_: Engine<NationalEconomyApp>;
+	createConnectionHandler(connection: MessageConnection): ConnectionHandler {
+		return {
+			onMessage: (message: Message) => {
+				console.log(message);
+			},
+			onDestroy: () => {
+				console.log("onDestroy");
+			}
+		};
+	}
+	private engine_: Engine;
 }

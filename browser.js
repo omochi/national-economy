@@ -1,3 +1,10 @@
-const App = require("./out/browser/App");
-var app = new App();
-app.run();
+"use strict";
+
+console.log("browser.js");
+
+let pkg = require("./out/browser/Engine");
+const Engine = pkg.Engine;
+
+const engine = new Engine();
+window.engine = engine;
+engine.run();

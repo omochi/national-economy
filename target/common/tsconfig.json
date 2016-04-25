@@ -10,6 +10,7 @@
     "outDir": "../../out/common"
   },
   "files": [
+    "../../typings/main/definitions/lodash/index.d.ts",
     "../../node_modules/rx/ts/rx.all.d.ts",
     "../../type_decl/common/left-pad.d.ts",
     "../../src/common/Data.ts",

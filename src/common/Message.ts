@@ -9,9 +9,10 @@ export interface Message {
 }
 
 export class MessageConnection {
-	constructor(socket: Socket) {
-		this.disposable_ = new CompositeDisposable();
+	constructor(socket: Socket, sessionId: string) {
 		this.socket_ = socket;
+		this.sessionId_ = sessionId;
+		this.disposable_ = new CompositeDisposable();
 		this.onMessage_ = new Subject<Message>();
 		this.onClose_ = new Subject<void>();
 		this.onError_ = new Subject<Error>();
@@ -46,6 +47,10 @@ export class MessageConnection {
 		this.disposable_.add(sub);
 	}
 
+	sessionId(): string {
+		return this.sessionId_;
+	}
+
 	onMessage(): Observable<Message> {
 		return this.onMessage_;
 	}
@@ -72,8 +77,10 @@ export class MessageConnection {
 		this.close();
 	}
 
-	private disposable_: CompositeDisposable;
+
 	private socket_: Socket;
+	private sessionId_: string;
+	private disposable_: CompositeDisposable;
 	private onMessage_: Subject<Message>;
 	private onClose_: Subject<void>;
 	private onError_: Subject<Error>;

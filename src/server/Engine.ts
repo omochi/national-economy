@@ -5,24 +5,35 @@ import {
 	request as WebSocketRequest,
 	connection as WebSocketConnection } from "websocket";
 import * as http from "http";
+import { CompositeDisposable, Disposable } from "rx";
 
 import { toError } from "../../out/common/Error"; 
 import { Timer } from "../../out/common/Timer";
 import { MessageConnection } from "../../out/common/Message";
 
 import { rand, makeRandomString } from "./Util";
-import { AppSession } from "./AppSession";
 import { SessionManager } from "./Session";
 import { SocketImpl } from "./SocketImpl";
 
+export interface App {
+	createSessionData(): any;
 
-class App {
+	onConnection(connection: MessageConnection): void;
 
-	run() {
-		this.sessionManager = new SessionManager(AppSession);
+}
+
+export class Engine<
+	AppType extends App
+> {
+	run(app: AppType) {
+		this.app_ = app;
+		this.diposable_ = new CompositeDisposable();
+		this.sessionManager_ = new SessionManager(() => { 
+			this.app_.createSessionData() });
+		this.connections_ = [];
 
 		const koaApp = new Koa();
-		koaApp.use(this.sessionManager.asKoaMiddleware());
+		koaApp.use(this.sessionManager_.asKoaMiddleware());
 		koaApp.use(koaStatic("static", {}));
 		const port = 3003;
 		console.log(`start listen at ${port}`);
@@ -46,21 +57,47 @@ class App {
 				return;
 			}
 
-			let session = this.sessionManager.openSession(sid);
+			let session = this.sessionManager_.openSession(sid);
 			if (session == null) {
 				request.reject(403, "invalid session id");
 				return;
 			}
 			
 			const socket = new SocketImpl(request.accept(null, null));
-			const connection = new MessageConnection(socket);
-			
-			session.value().messageConnections().push(connection);
+
 		});
 
 		httpServer.listen(port);
 	}
 
-	private sessionManager: SessionManager<AppSession>;
+	private createConnection(socket: SocketImpl) {
+		const connection = new MessageConnection(socket, sid);	
+		this.connections_.push(connection);
+
+		const disposable = new CompositeDisposable();
+
+		const destroyConnection = () => {
+			this.diposable_.remove(disposable);
+		};
+
+		let sub: Disposable = null;
+		sub = connection.onClose().subscribeOnNext(() => {
+			destroyConnection();
+		});
+		disposable.add(sub);
+		sub = connection.onError().subscribeOnNext((err) => {
+			destroyConnection();
+		});
+		disposable.add(sub);
+
+		this.diposable_.add(disposable);
+
+		this.app_.onConnection(connection);
+	}
+
+	private app_: AppType;
+	private diposable_: CompositeDisposable;
+	private sessionManager_: SessionManager;
+	private connections_: MessageConnection[];
+
 }
-export = App;

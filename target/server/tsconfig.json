@@ -22,9 +22,9 @@
     "../../typings/main/ambient/websocket/index.d.ts",
     "../../type_decl/server/etc.d.ts",
     "../../type_decl/server/koa.d.ts",
-    "../../src/server/App.ts",
-    "../../src/server/AppSession.ts",
     "../../src/server/DataImpl.ts",
+    "../../src/server/Engine.ts",
+    "../../src/server/NationalEconomy.ts",
     "../../src/server/Session.ts",
     "../../src/server/SocketImpl.ts",
     "../../src/server/Util.ts"

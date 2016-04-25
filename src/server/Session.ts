@@ -1,18 +1,18 @@
 import { makeRandomString } from "./Util";
 import { Timer } from "../../out/common/Timer";
 
-export class SessionEntry<T> {
-	constructor(id: string, value: T) {
+export class SessionEntry {
+	constructor(id: string, data: any) {
 		this.id_ = id;
-		this.value_ = value;
+		this.data_ = data;
 		this.touch(60);
 	}
 
 	id(): string {
 		return this.id_;
 	}
-	value(): T {
-		return this.value_;
+	data(): any {
+		return this.data_;
 	}
 	lastAccessTime(): Date {
 		return this.lastAccessTime_;
@@ -27,65 +27,65 @@ export class SessionEntry<T> {
 	}
 
 	private id_: string;
-	private value_: T;
+	private data_: any;
 	private lastAccessTime_: Date;
 	private expiringTime_: Date;
 };
 
-export class SessionManager<T> {
-	constructor(valueClass: { new (): T }) {
-		this.closed = false;
-		this.valueClass = valueClass;
-		this.entries = {};
+export class SessionManager {
+	constructor(createData: () => any) {
+		this.closed_ = false;
+		this.createData_ = createData;
+		this.entries_ = {};
 
-		this.sessionIdKey = "sid";
-		this.sessionLifeTime = 60;
-		this.gcTimer = Timer.createRepeatForever(10, () => {
+		this.sessionIdKey_ = "sid";
+		this.sessionLifeTime_ = 60;
+		this.gcTimer_ = Timer.createRepeatForever(10, () => {
 			this.onGc();
 		});
 	}
 
 	close() {
-		if (this.closed) {
+		if (this.closed_) {
 			return;
 		}
-		this.gcTimer.cancel();
-		this.gcTimer = null;
-		this.closed = true;
+		this.gcTimer_.cancel();
+		this.gcTimer_ = null;
+		this.closed_ = true;
 	}
 
 	asKoaMiddleware(): (ctx: any, next: any) => any {
 		return this.koaMiddlewareBody.bind(this);
 	}
 
-	openSession(id: string): SessionEntry<T> {
-		const entry = this.entries[id];
+	openSession(id: string): SessionEntry {
+		const entry = this.entries_[id];
 		if (entry != null) {
-			entry.touch(this.sessionLifeTime);
+			entry.touch(this.sessionLifeTime_);
 			// console.log(`open session ${id}`);
 		}
 
 		return entry;
 	}
 
-	createSession(): SessionEntry<T> {
+	createSession(): SessionEntry {
 		const id = makeRandomString(20);
-		const entry = new SessionEntry<T>(id, new this.valueClass());
-		this.entries[id] = entry;
+		const entry = new SessionEntry(id, this.createData_());
+		this.entries_[id] = entry;
 
 		console.log(`create session ${id}`);
-		entry.touch(this.sessionLifeTime);
+		entry.touch(this.sessionLifeTime_);
 
 		return entry;
 	}
 	
 	deleteSession(id: string) {
 		console.log(`delete session ${id}`);
-		delete this.entries[id];
+		delete this.entries_[id];
 	}
 
 	private koaMiddlewareBody(ctx: any, next: any): any {
-		const sessionId = ctx.cookies.get(this.sessionIdKey);
+		const sessionId = ctx.cookies.get(this.sessionIdKey_);
 		if (sessionId != null) {
 			const entry = this.openSession(sessionId);
 			if (entry != null) {
@@ -95,25 +95,25 @@ export class SessionManager<T> {
 
 		const entry = this.createSession();
 
-		ctx.cookies.set(this.sessionIdKey, entry.id());
+		ctx.cookies.set(this.sessionIdKey_, entry.id());
 
 		return next();
 	}
 
 	private onGc() {
 		const now = new Date();
-		Object.keys(this.entries).forEach((id) => {
-			const entry = this.entries[id];
+		Object.keys(this.entries_).forEach((id) => {
+			const entry = this.entries_[id];
 			if (entry.expiringTime().getTime() <= now.getTime()) {
 				this.deleteSession(entry.id());
 			}
 		});
 	}
 	
-	closed: boolean;
-	valueClass: { new (): T };
-	sessionIdKey: string;
-	sessionLifeTime: number;
-	entries: { [id: string]: SessionEntry<T> };
-	gcTimer: Timer;
+	private closed_: boolean;
+	private createData_: () => any;
+	private sessionIdKey_: string;
+	private sessionLifeTime_: number;
+	private entries_: { [id: string]: SessionEntry };
+	private gcTimer_: Timer;
 };

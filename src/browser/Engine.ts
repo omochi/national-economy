@@ -1,9 +1,9 @@
+import { Timer } from "../../out/common/Timer";
 import { Message, MessageConnection,
 	PingMessage
  } from "../../out/common/Message";
 
  import { SocketImpl } from "./SocketImpl";
-
 
 export class Engine {
 
@@ -12,10 +12,15 @@ export class Engine {
 		console.log(`url = ${url}`);
 		const socket = new SocketImpl(new WebSocket(url));
 		this.connection_ = new MessageConnection(socket);
+	
+		this.keepAliveTimer_ = Timer.createRepeatForever(10, () => { this.onKeepAliveTimer(); });
+	}
+
+	private onKeepAliveTimer() {
 		this.connection_.send(new PingMessage());
 	}
 
-	getWebSocketUrl(location: Location): string {
+	private getWebSocketUrl(location: Location): string {
 		const isSsl: boolean = (() => {
 			if (location.protocol == "https:") {
 				return true;
@@ -45,5 +50,6 @@ export class Engine {
 	}
 
 	private connection_: MessageConnection;
+	private keepAliveTimer_: Timer;
 
 }

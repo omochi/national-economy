@@ -85,6 +85,11 @@ export class Engine {
 		httpServer.listen(port);
 	}
 
+	closeConnection(connection: MessageConnection) {
+		connection.close();
+		this.destroyConnection(connection);
+	}
+
 	private createConnection(socket: SocketImpl, sessionId: string) {
 		const connection = new MessageConnection(socket);	
 

@@ -1,6 +1,6 @@
 import { Timer } from "../../out/common/Timer";
 import { Message, MessageConnection,
-	PingMessage } from "../../out/common/Message";
+	PingMessage, KickMessage } from "../../out/common/Message";
 
 import { Engine, App, ConnectionHandler } from "./Engine";
 
@@ -16,8 +16,20 @@ export class NationalEconomyApp implements App {
 
 		};
 	}
-	createConnectionHandler(connection: MessageConnection): ConnectionHandler {
-		return new AppConnectionHandler(this, connection);
+	createConnectionHandler(connection: MessageConnection, sessionId: string): ConnectionHandler {
+		const handler = new AppConnectionHandler(this, connection);
+		
+		const otherConnections = this.engine().connections()
+			.filter(x => { 
+				return (x.handler instanceof AppConnectionHandler) &&
+					(x.sessionId == sessionId)
+			})
+			.forEach(x => {
+				const handler = <AppConnectionHandler>x.handler;
+
+			});
+		
+		return handler;
 	}
 	private engine_: Engine;
 }
@@ -36,6 +48,9 @@ class AppConnectionHandler implements ConnectionHandler {
 	engine(): Engine {
 		return this.app().engine();
 	}
+	connection(): MessageConnection {
+		return this.connection_;
+	}
 
 	onMessage(message: Message) {
 		if (message instanceof PingMessage) {
@@ -49,6 +64,10 @@ class AppConnectionHandler implements ConnectionHandler {
 		this.keepAliveTimer_ = null;
 	}
 
+	kickDuplicatedConnection() {
+		this.connection().send(new KickMessage("画面を2つ開く事はできません。"));
+	}
+
 	private restartKeepAliveTimer() {
 		console.log("restart keep alive")
 		if (this.keepAliveTimer_ != null) {
@@ -59,7 +78,7 @@ class AppConnectionHandler implements ConnectionHandler {
 	}
 
 	private onKeepAliveTimer() {
-		console.log("out");
+		console.log("keep alive timeout");
 		this.engine().closeConnection(this.connection_);
 	}
 

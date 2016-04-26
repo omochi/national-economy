@@ -1,3 +1,5 @@
+import { CompositeDisposable } from "rx";
+
 import { Timer } from "../../out/common/Timer";
 import { Message, MessageConnection,
 	PingMessage
@@ -8,12 +10,36 @@ import { Message, MessageConnection,
 export class Engine {
 
 	run() {
+		this.disposable_ = new CompositeDisposable();
+
 		const url = this.getWebSocketUrl(window.location);
 		console.log(`url = ${url}`);
 		const socket = new SocketImpl(new WebSocket(url));
-		this.connection_ = new MessageConnection(socket);
+		
+		const conn = new MessageConnection(socket);
+		this.connection_ = conn;
+		
+		[
+		conn.onMessage().subscribeOnNext(msg => {
+			console.log("msg", msg);
+		}),
+		conn.onError().subscribeOnNext(err => {
+			console.log("err", err);
+			this.stop();
+		}),
+		conn.onClose().subscribeOnNext(x => {
+			console.log("close");
+			this.stop();
+		})
+		].forEach(x => { this.disposable_.add(x); });
 	
-		this.keepAliveTimer_ = Timer.createRepeatForever(10, () => { this.onKeepAliveTimer(); });
+		this.keepAliveTimer_ = Timer.createRepeatForever(10, () => { 
+			this.onKeepAliveTimer(); });
+	}
+
+	private stop() {
+		this.keepAliveTimer_.cancel();
+		this.disposable_.dispose();
 	}
 
 	private onKeepAliveTimer() {
@@ -49,6 +75,7 @@ export class Engine {
 		return strs.join("");
 	}
 
+	private disposable_: CompositeDisposable;
 	private connection_: MessageConnection;
 	private keepAliveTimer_: Timer;
 

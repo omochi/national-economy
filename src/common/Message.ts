@@ -9,7 +9,7 @@ export interface Message {
 }
 
 export interface MessageType {
-	name(): string;
+	key(): string;
 	fromJson(json: Json): Message;
 }
 
@@ -66,7 +66,7 @@ export class MessageConnection {
 	}
 	send(message: Message) {
 		const jsonStr: string = Json.object({
-			"type": Json.string(message.type().name()),
+			"type": Json.string(message.type().key()),
 			"body": message.toJson()
 		}).format();
 		this.socket_.send({ string: jsonStr });
@@ -107,7 +107,7 @@ export class MessageDecoder {
 	}
 
 	private register(messageType: MessageType) {
-		this.decoderTable_[messageType.name()] = (json: Json) => {
+		this.decoderTable_[messageType.key()] = (json: Json) => {
 			return messageType.fromJson(json);
 		}
 	}
@@ -116,14 +116,14 @@ export class MessageDecoder {
 }
 
 export class PingMessage implements Message {
-	static name(): string {
-		return "Ping"; 
-	}
 	type(): MessageType {
 		return PingMessage;
 	}
 	toJson(): Json {
 		return Json.object({}); 
+	}
+	static key(): string {
+		return "Ping"; 
 	}
 	static fromJson(json: Json): PingMessage {
 		return new PingMessage();
@@ -131,19 +131,24 @@ export class PingMessage implements Message {
 }
 
 export class KickMessage implements Message {
-	static name(): string {
-		return "Kick";
+	constructor(public reason: string) {
 	}
 	type(): MessageType {
 		return KickMessage;
 	}
 	toJson(): Json {
-		return null; //TODO
+		return Json.object({
+			"reason": Json.string(this.reason)
+		});
+	}
+	static key(): string {
+		return "Kick";
 	}
 	static fromJson(json: Json): KickMessage {
-		return new KickMessage();
+		return new KickMessage(
+			json.queryKey("reason").string()
+		);
 	}
-
 }
 
 

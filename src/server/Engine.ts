@@ -21,7 +21,7 @@ export interface App {
 
 	createSessionData(): any;
 
-	createConnectionHandler(connection: MessageConnection): ConnectionHandler;
+	createConnectionHandler(connection: MessageConnection, sessionId: string): ConnectionHandler;
 }
 
 export interface ConnectionHandler {
@@ -29,7 +29,7 @@ export interface ConnectionHandler {
 	onDestroy(): void;
 }
 
-interface ConnectionEntry {
+export interface ConnectionEntry {
 	connection: MessageConnection;
 	handler: ConnectionHandler;
 	disposable: Disposable;
@@ -39,6 +39,9 @@ interface ConnectionEntry {
 export class Engine {
 	constructor(app: App) {
 		this.app_ = app;
+	}
+	connections(): ConnectionEntry[] {
+		return this.connections_;
 	}
 	run() {
 		this.app_.init(this);
@@ -91,33 +94,30 @@ export class Engine {
 	}
 
 	private createConnection(socket: SocketImpl, sessionId: string) {
-		const connection = new MessageConnection(socket);	
-
 		const disposable = new CompositeDisposable();
+		const conn = new MessageConnection(socket);
+		let handler: ConnectionHandler = null;
 		this.diposable_.add(disposable);
 
-		let handler: ConnectionHandler = null;
-
-		[	connection.onMessage().subscribeOnNext((x) => {
+		[	conn.onMessage().subscribeOnNext((x) => {
 				handler.onMessage(x);
 			}),
-			connection.onClose().subscribeOnNext(() => {
-				this.destroyConnection(connection);
+			conn.onClose().subscribeOnNext(() => {
+				this.destroyConnection(conn);
 			}),
-			connection.onError().subscribeOnNext((err) => {
-				this.destroyConnection(connection);
+			conn.onError().subscribeOnNext((err) => {
+				this.destroyConnection(conn);
 			})
 		].forEach(x => { disposable.add(x) });
 
-		handler = this.app_.createConnectionHandler(connection);
+		handler = this.app_.createConnectionHandler(conn, sessionId);
 
 		this.connections_.push({
-			connection: connection,
+			connection: conn,
 			handler: handler,
 			disposable: disposable,
 			sessionId: sessionId
 		});
-
 	}
 
 	private destroyConnection(connection: MessageConnection) {
@@ -128,7 +128,10 @@ export class Engine {
 		}
 
 		const entry = this.connections_[index];
-		entry.handler.onDestroy();
+		if (entry.handler != null) {
+			entry.handler.onDestroy();
+		}
+
 		this.diposable_.remove(entry.disposable);
 		this.connections_.splice(index, 1);
 	}

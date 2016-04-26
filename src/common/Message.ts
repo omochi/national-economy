@@ -4,8 +4,13 @@ import { toError } from "./Error";
 import { Socket, SocketMessage } from "./Socket";
 
 export interface Message {
-	type(): string;
+	type(): MessageType;
 	toJson(): Json;
+}
+
+export interface MessageType {
+	name(): string;
+	fromJson(json: Json): Message;
 }
 
 export class MessageConnection {
@@ -61,7 +66,7 @@ export class MessageConnection {
 	}
 	send(message: Message) {
 		const jsonStr: string = Json.object({
-			"type": Json.string(message.type()),
+			"type": Json.string(message.type().name()),
 			"body": message.toJson()
 		}).format();
 		this.socket_.send({ string: jsonStr });
@@ -83,9 +88,10 @@ export class MessageConnection {
 export class MessageDecoder {
 	
 	constructor() {
-		this.decoderTable_ = {
-			"Ping": PingMessage.fromJson
-		};
+		this.decoderTable_ = {};
+
+		this.register(PingMessage);
+		this.register(KickMessage);
 	}
 
 	decode(json: Json): Message {
@@ -100,12 +106,21 @@ export class MessageDecoder {
 		return decoder(body);
 	}
 
+	private register(messageType: MessageType) {
+		this.decoderTable_[messageType.name()] = (json: Json) => {
+			return messageType.fromJson(json);
+		}
+	}
+
 	private decoderTable_: { [type: string]: (json: Json) => Message };
 }
 
-export class PingMessage {
-	type(): string { 
+export class PingMessage implements Message {
+	static name(): string {
 		return "Ping"; 
+	}
+	type(): MessageType {
+		return PingMessage;
 	}
 	toJson(): Json {
 		return Json.object({}); 
@@ -114,3 +129,23 @@ export class PingMessage {
 		return new PingMessage();
 	}
 }
+
+export class KickMessage implements Message {
+	static name(): string {
+		return "Kick";
+	}
+	type(): MessageType {
+		return KickMessage;
+	}
+	toJson(): Json {
+		return null; //TODO
+	}
+	static fromJson(json: Json): KickMessage {
+		return new KickMessage();
+	}
+
+}
+
+
+
+

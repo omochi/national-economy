@@ -38,8 +38,8 @@ class AppConnectionHandler implements ConnectionHandler {
 	constructor(app: NationalEconomyApp, connection: MessageConnection) {
 		this.app_ = app;
 		this.connection_ = connection;
-		this.keepAliveTimer_ = null;
-		this.restartKeepAliveTimer();
+		this.keepAliveTimeoutTimer_ = new Timer();
+		this.startKeepAliveTimeoutTimer();
 	}
 
 	app(): NationalEconomyApp {
@@ -54,35 +54,26 @@ class AppConnectionHandler implements ConnectionHandler {
 
 	onMessage(message: Message) {
 		if (message instanceof PingMessage) {
-			this.restartKeepAliveTimer();
+			this.connection().send(new PingMessage());
+			this.startKeepAliveTimeoutTimer();
 		}
 	}
 
 	onDestroy() {
 		console.log("onDestroy");
-		this.keepAliveTimer_.cancel();
-		this.keepAliveTimer_ = null;
+		this.keepAliveTimeoutTimer_.cancel();
 	}
 
 	kickDuplicatedConnection() {
 		this.connection().send(new KickMessage("画面を2つ開く事はできません。"));
 	}
 
-	private restartKeepAliveTimer() {
-		console.log("restart keep alive")
-		if (this.keepAliveTimer_ != null) {
-			this.keepAliveTimer_.cancel();
-			this.keepAliveTimer_ = null;
-		}
-		this.keepAliveTimer_ = Timer.create(4, () => { this.onKeepAliveTimer(); });
-	}
-
-	private onKeepAliveTimer() {
-		console.log("keep alive timeout");
-		this.engine().closeConnection(this.connection_);
+	private startKeepAliveTimeoutTimer() {
+		this.keepAliveTimeoutTimer_.start(30, () => {
+			this.engine().closeConnection(this.connection_); });
 	}
 
 	private app_: NationalEconomyApp;
 	private connection_: MessageConnection;
-	private keepAliveTimer_: Timer;
+	private keepAliveTimeoutTimer_: Timer;
 }

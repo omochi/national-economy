@@ -26,74 +26,37 @@ export class Timeout {
 }
 
 export class Timer {
-	constructor(delay: number, proc: () => void, repeatForever: boolean, repeatNum: number) {
-		this.delay = delay;
-		this.proc = proc;
-		this.repeatForever = repeatForever;
-		this.repeatNum = repeatNum;
-
-		this.timeout = null;
-		this.repeatCount = 0;
+	constructor() {
+		this.timeout_ = null;
+		this.proc_ = null;
 	}
 
 	started(): boolean {
-		return this.timeout != null;
+		return this.timeout_ != null;
 	}
 
-	start() {
+	start(delay: number, proc: () => void) {
 		if (this.started()) {
-			throw new Error("already started");
+			this.cancel();
 		}
-		this.setTimeout();
-	}
-
-	cancel() {
-		if (this.timeout != null) {
-			this.timeout.cancel();
-			this.timeout = null;
-		}
-		this.repeatCount = 0;
-	}
-
-	static create(delay: number, proc: () => void): Timer {
-		const timer = new Timer(delay, proc, false, 1);
-		timer.start();
-		return timer;
-	}
-
-	static createRepeat(delay: number, num: number, proc: () => void): Timer {
-		const timer = new Timer(delay, proc, false, num);
-		timer.start();
-		return timer;
-	}
-
-	static createRepeatForever(delay: number, proc: () => void): Timer {
-		const timer = new Timer(delay, proc, true, 0);
-		timer.start();
-		return timer;
-	}
-
-	private setTimeout() {
-		this.timeout = new Timeout(this.delay, () => {
+		this.proc_ = proc;
+		this.timeout_ = new Timeout(delay, () => {
 			this.onTimeout();
 		});
 	}
 
-	private onTimeout() {
-		this.proc();
-		this.repeatCount += 1;
-		this.timeout = null;
-
-		if (this.repeatForever || this.repeatCount < this.repeatNum) {
-			this.setTimeout();
+	cancel() {
+		if (this.timeout_ != null) {
+			this.timeout_.cancel();
+			this.timeout_ = null;
 		}
 	}
 
-	private delay: number;
-	private proc: () => void;
-	private repeatForever: boolean;
-	private repeatNum: number;
+	private onTimeout() {
+		this.timeout_ = null;
+		this.proc_();
+	}
 
-	private timeout: Timeout;
-	private repeatCount: number;
+	private proc_: () => void;
+	private timeout_: Timeout;
 }

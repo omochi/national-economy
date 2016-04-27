@@ -40,9 +40,9 @@ export class SessionManager {
 
 		this.sessionIdKey_ = "sid";
 		this.sessionLifeTime_ = 60;
-		this.gcTimer_ = Timer.createRepeatForever(10, () => {
-			this.onGc();
-		});
+		this.gcTimer_ = new Timer();
+
+		this.startGcTimer();
 	}
 
 	close() {
@@ -50,7 +50,6 @@ export class SessionManager {
 			return;
 		}
 		this.gcTimer_.cancel();
-		this.gcTimer_ = null;
 		this.closed_ = true;
 	}
 
@@ -100,6 +99,12 @@ export class SessionManager {
 		return next();
 	}
 
+	private startGcTimer() {
+		this.gcTimer_.start(10, () => {
+			this.onGc();
+		});
+	}
+
 	private onGc() {
 		const now = new Date();
 		Object.keys(this.entries_).forEach((id) => {
@@ -108,6 +113,7 @@ export class SessionManager {
 				this.deleteSession(entry.id());
 			}
 		});
+		this.startGcTimer();
 	}
 	
 	private closed_: boolean;

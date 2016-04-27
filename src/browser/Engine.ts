@@ -10,6 +10,8 @@ import { Message, MessageConnection,
 export class Engine {
 
 	run() {
+		this.expectingServerClose_ = false;
+
 		this.disposable_ = new CompositeDisposable();
 
 		const url = this.getWebSocketUrl(window.location);
@@ -21,29 +23,58 @@ export class Engine {
 		
 		[
 		conn.onMessage().subscribeOnNext(msg => {
-			console.log("msg", msg);
+			this.handleConnectionMessage(msg);
 		}),
 		conn.onError().subscribeOnNext(err => {
-			console.log("err", err);
-			this.stop();
+			this.handleError(err);
 		}),
-		conn.onClose().subscribeOnNext(x => {
-			console.log("close");
-			this.stop();
+		conn.onClose().subscribeOnNext(() => {
+			this.handleConnectionClose();
 		})
 		].forEach(x => { this.disposable_.add(x); });
 	
-		this.keepAliveTimer_ = Timer.createRepeatForever(10, () => { 
-			this.onKeepAliveTimer(); });
+		this.keepAliveSendTimer_ = new Timer();
+		this.keepAliveTimeoutTimer_ = new Timer();
+		this.startKeepAliveSendTimer();
 	}
 
-	private stop() {
-		this.keepAliveTimer_.cancel();
+	private shutdown() {
+		this.keepAliveSendTimer_.cancel();
+		this.keepAliveTimeoutTimer_.cancel();
 		this.disposable_.dispose();
 	}
 
-	private onKeepAliveTimer() {
-		this.connection_.send(new PingMessage());
+	private handleError(error: Error) {
+		this.showAlert(`エラー ${error}`);
+		this.shutdown();
+	}
+
+	private handleConnectionMessage(message: Message) {
+		if (message instanceof PingMessage) {
+			this.keepAliveTimeoutTimer_.cancel();
+		}
+	}
+
+	private handleConnectionClose() {
+		if (!this.expectingServerClose_) {
+			this.showAlert("サーバーとの接続が切れてしまいました。");	
+		}
+		this.shutdown();
+	}
+
+	private showAlert(msg: string) {
+		window.alert(msg);	
+	}
+
+	private startKeepAliveSendTimer() {
+		this.keepAliveSendTimer_.start(10, () => {
+			this.connection_.send(new PingMessage());
+			this.keepAliveTimeoutTimer_.start(5, () => {
+				this.connection_.close();
+				this.handleConnectionClose();
+			});
+			this.startKeepAliveSendTimer();
+		});
 	}
 
 	private getWebSocketUrl(location: Location): string {
@@ -77,6 +108,8 @@ export class Engine {
 
 	private disposable_: CompositeDisposable;
 	private connection_: MessageConnection;
-	private keepAliveTimer_: Timer;
+	private keepAliveSendTimer_: Timer;
+	private keepAliveTimeoutTimer_: Timer;
+	private expectingServerClose_: boolean;
 
 }

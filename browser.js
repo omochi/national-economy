@@ -1,7 +1,5 @@
 "use strict";
 
-console.log("browser.js");
-
 let pkg = require("./out/browser/Engine");
 const Engine = pkg.Engine;
 

@@ -23,10 +23,9 @@ export class NationalEconomyApp implements App {
 			.filter(x => { 
 				return (x.handler instanceof AppConnectionHandler) &&
 					(x.sessionId == sessionId)
-			})
-			.forEach(x => {
+			}).forEach(x => {
 				const handler = <AppConnectionHandler>x.handler;
-
+				handler.kickDuplicatedConnection();
 			});
 		
 		return handler;

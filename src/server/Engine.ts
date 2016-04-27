@@ -131,7 +131,8 @@ export class Engine {
 		if (entry.handler != null) {
 			entry.handler.onDestroy();
 		}
-
+		
+		entry.disposable.dispose();
 		this.diposable_.remove(entry.disposable);
 		this.connections_.splice(index, 1);
 	}

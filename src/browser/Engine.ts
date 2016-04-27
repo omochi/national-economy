@@ -2,7 +2,7 @@ import { CompositeDisposable } from "rx";
 
 import { Timer } from "../../out/common/Timer";
 import { Message, MessageConnection,
-	PingMessage
+	PingMessage, KickMessage,
  } from "../../out/common/Message";
 
  import { SocketImpl } from "./SocketImpl";
@@ -49,9 +49,12 @@ export class Engine {
 		this.shutdown();
 	}
 
-	private handleConnectionMessage(message: Message) {
-		if (message instanceof PingMessage) {
+	private handleConnectionMessage(msg: Message) {
+		if (msg instanceof PingMessage) {
 			this.keepAliveTimeoutTimer_.cancel();
+		} else if (msg instanceof KickMessage) {
+			this.expectingServerClose_ = true;
+			this.showAlert(msg.reason);
 		}
 	}
 

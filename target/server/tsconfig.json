@@ -17,6 +17,7 @@
     "../../out/common/Error.d.ts",
     "../../out/common/Json.d.ts",
     "../../out/common/Message.d.ts",
+    "../../out/common/NationalEconomy.d.ts",
     "../../out/common/Socket.d.ts",
     "../../out/common/Timer.d.ts",
     "../../typings/main/ambient/node/index.d.ts",

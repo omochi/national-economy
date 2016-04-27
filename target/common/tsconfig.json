@@ -17,6 +17,7 @@
     "../../src/common/Error.ts",
     "../../src/common/Json.ts",
     "../../src/common/Message.ts",
+    "../../src/common/NationalEconomy.ts",
     "../../src/common/Socket.ts",
     "../../src/common/Timer.ts"
   ]

@@ -126,23 +126,27 @@ export class Json {
 		}
 	}
 
-	readOptional<T>(read: (json: Json) => T): T {
+	decodeOptional<T>(read: (json: Json) => T): T {
 		if (this.type() == JsonType.Null) {
 			return null;
 		}
 		return read(this);
 	}
 
-	readArray<T>(readElement: (json: Json) => T): T[] {
-		return this.array().map((x) => { return readElement(x); });
+	static encodeArray<T>(array: T[], encodeElement: (element: T) => Json): Json {
+		return Json.array(array.map(x => { return encodeElement(x); }));
 	}
 
-	readDictionary<T>(readElement: (json: Json) => T): { [key: string]: T } {
+	decodeArray<T>(decodeElement: (json: Json) => T): T[] {
+		return this.array().map((x) => { return decodeElement(x); });
+	}
+
+	decodeDictionary<T>(decodeElement: (json: Json) => T): { [key: string]: T } {
 		const obj = this.object();
 		const dict: { [key: string]: T } = {};
 		Object.keys(obj).forEach((k: string) => {
 			const v: Json = obj[k];
-			dict[k] = readElement(v);
+			dict[k] = decodeElement(v);
 		});
 		return dict;
 	}

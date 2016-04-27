@@ -106,7 +106,7 @@ export class MessageDecoder {
 		return decoder(body);
 	}
 
-	private register(messageType: MessageType) {
+	register(messageType: MessageType) {
 		this.decoderTable_[messageType.key()] = (json: Json) => {
 			return messageType.fromJson(json);
 		}
